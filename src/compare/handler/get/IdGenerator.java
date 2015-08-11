@@ -31,4 +31,8 @@ public class IdGenerator
     {
         return id++;
     }
+    public int getCurrent()
+    {
+        return id;
+    }
 }

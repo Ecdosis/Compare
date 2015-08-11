@@ -210,9 +210,9 @@ public class ListHandler extends CompareGetHandler
         docid = request.getParameter(Params.DOCID);
         try
         {
-            if ( docid != null && version1 != null )
+            if ( docid != null )
             {
-                String table = getVersionTableForUrn( docid );
+                String table = getVersionTable( docid );
                 table = unescape(table);
                 String listName = request.getParameter( Params.NAME );
                 if ( listName == null )
@@ -224,8 +224,8 @@ public class ListHandler extends CompareGetHandler
                 String[] css = fetchStyles( styles );
                 JSONResponse html = new JSONResponse(JSONResponse.HTML );
                 //System.out.println("about to format list");
-                int res = new AeseFormatter().format( table, 
-                    corcodes, css, html );
+                // String text, String[] markup, String[] css,JSONResponse output 
+                int res = new AeseFormatter().format( table, corcodes, css, html );
                 if ( res == 0 )
                     throw new NativeException("formatting failed");
                 else
@@ -237,7 +237,7 @@ public class ListHandler extends CompareGetHandler
             else
             {
                 response.setContentType("text/html;charset=UTF-8");
-                response.getWriter().println( "docid or version1 parameter missing" );
+                response.getWriter().println( "document identifier missing" );
             }
             
         }

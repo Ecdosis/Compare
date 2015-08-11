@@ -111,20 +111,25 @@ public abstract class MetadataHandler extends CompareGetHandler
         {
             Connection conn = Connector.getConnection();
             docid = request.getParameter(Params.DOCID);
-            String res = conn.getFromDb(Database.METADATA,docid);
-            JSONObject  jObj1 = null;
-            if ( res != null )
+            if ( docid != null && docid.length()> 0 )
             {
-                jObj1 = (JSONObject)JSONValue.parse(res);
-                if ( jObj1.containsKey(metadataKey) )
+                String res = conn.getFromDb(Database.METADATA,docid);
+                JSONObject  jObj1 = null;
+                if ( res != null )
                 {
-                    metadataValue = (String) jObj1.get(metadataKey);
-                    saved = true;
+                    jObj1 = (JSONObject)JSONValue.parse(res);
+                    if ( jObj1.containsKey(metadataKey) )
+                    {
+                        metadataValue = (String) jObj1.get(metadataKey);
+                        saved = true;
+                    }
                 }
+                if ( metadataValue == null )
+                    getMetadataFromCortex( conn );
+                saveToMetadata( jObj1, conn );
             }
-            if ( metadataValue == null )
-                getMetadataFromCortex( conn );
-            saveToMetadata( jObj1, conn );
+            else
+                metadataValue = "";
             response.setContentType("text/plain");
             response.getWriter().write(metadataValue);
         }

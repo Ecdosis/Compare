@@ -21,8 +21,6 @@ import compare.constants.ChunkState;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import calliope.AeseFormatter;
-import calliope.exception.*;
-import calliope.core.constants.Formats;
 import calliope.core.constants.Database;
 import calliope.core.exception.NativeException;
 import calliope.core.Utils;
@@ -30,7 +28,6 @@ import calliope.json.JSONResponse;
 import compare.handler.EcdosisVersion;
 import compare.handler.EcdosisMVD;
 import java.util.ArrayList;
-import java.util.Map;
 import html.Comment;
 /**
  * Handle comparison between two versions of a document
@@ -44,20 +41,18 @@ public class HTMLComparisonHandler extends CompareGetHandler
      * @param version1 the group-path+version name
      * @param userCC an array of specified CorCode names for this docID
      * @param diffCC the CorCode of the diffs
-     * @param styleNamess an array of predefined style-names
+     * @param styleNames an array of predefined style-names
      * @param styles an empty arraylist of style names to be filled
-     * @param formats an empty array of CorCode formats to be filled
      * @return a simple array of CorCode texts in their corresponding formats
      */
     String[] getCorCodes( String docID, String version1, 
         String[] userCC, CorCode diffCC, String[] styleNames, 
-        ArrayList<String> styles, ArrayList<String> formats ) 
+        ArrayList<String> styles ) 
         throws CompareException
     {
         String[] ccTexts = new String[userCC.length+1];
         // add diffCC entries to corcodes and formats but not styles
         ccTexts[0] = diffCC.toString();
-        formats.add( Formats.STIL );
         // load user-defined styles
         if ( styleNames.length>0 )
         {
@@ -74,7 +69,7 @@ public class HTMLComparisonHandler extends CompareGetHandler
             {
                 char[] versionText = ev.getVersion();
                 if ( versionText == null )
-                    throw new AeseException("version not found");
+                    throw new CompareException("version not found");
                 ccTexts[i+1] = new String(versionText);
                 styles.add( fetchStyle(ev.getStyle()) );
             }
@@ -82,7 +77,6 @@ public class HTMLComparisonHandler extends CompareGetHandler
             {
                 throw new CompareException( e );
             }
-            formats.add( ev.getContentFormat() );
         }
         return ccTexts;
     }
@@ -125,41 +119,28 @@ public class HTMLComparisonHandler extends CompareGetHandler
             int[] lengths = text.mvd.getVersionLengths();
             if ( lengths==null || lengths.length<v1 || lengths.length<v2  )
                 throw new CompareException( "lengths array is empty" );
-            Run[] runs = new Run[1];
-            runs[0] = new Run( 0, lengths[v1-1] );
-            cc.compareText( text.mvd, v1, v2, diffKind, runs );
-            // get corCodes
-            String[] corCodes = new String[0];
-            String[] styles = new String[0];
-            Map paramMap = request.getParameterMap();
-            if ( paramMap != null )
-            {
-                String[] ccs = (String[])paramMap.get( Params.CORCODE );
-                String[] sss = (String[])paramMap.get( Params.STYLE );
-                if ( ccs != null && ccs.length > 0 )
-                    corCodes = ccs;
-                if ( sss != null && sss.length > 0 )
-                    styles = sss;
-            }
-            ArrayList<String> styleNames = new ArrayList<String>();
-            ArrayList<String> formats = new ArrayList<String>();
-            // add diff styles
-            String[] newStyles = new String[styles.length+1];
-            System.arraycopy( styles, 0, newStyles, 0, styles.length );
-            newStyles[styles.length] = "diffs/default";
-            String[] ccTexts = getCorCodes( urn, 
-                version1, corCodes, cc, newStyles, styleNames, formats );
-            String[] styleTexts = new String[styleNames.size()];
-            styleNames.toArray( styleTexts );
-            String[] formatTexts = new String[formats.size()];
-            formats.toArray( formatTexts );
-            // call the native library
-            JSONResponse html = new JSONResponse(JSONResponse.HTML);
-            char[] mvdVersionText = text.mvd.getVersion(v1);
+            cc.compareText( text.mvd, v1, v2, diffKind );
             try
             {
+                // get corCodes
+                String[] corCodes = new String[1];
+                corCodes[0] = docid+"/default";
+                String[] styles = new String[0];
+                ArrayList<String> styleNames = new ArrayList<String>();
+                // add diff styles
+                String[] newStyles = new String[styles.length+1];
+                System.arraycopy( styles, 0, newStyles, 0, styles.length );
+                newStyles[styles.length] = "diffs/default";
+                String[] ccTexts = getCorCodes( urn, 
+                    version1, corCodes, cc, newStyles, styleNames );
+                String[] styleTexts = new String[styleNames.size()];
+                styleNames.toArray( styleTexts );
+                // call the native library
+                JSONResponse html = new JSONResponse(JSONResponse.HTML);
+                char[] mvdVersionText = text.mvd.getVersion(v1);
+                String mvdString = new String(mvdVersionText);
                 int res = new AeseFormatter().format( 
-                    new String(mvdVersionText), ccTexts, styleTexts, html );
+                    mvdString, ccTexts, styleTexts, html );
                 if ( res == 0 )
                     throw new NativeException("formatting failed");
                 else
@@ -169,8 +150,9 @@ public class HTMLComparisonHandler extends CompareGetHandler
                     comment.addText( "styles: ");
                     for ( int i=0;i<styleTexts.length;i++ )
                         comment.addText( styleTexts[i] );
-                    //System.out.println(html.getBody());
                     response.getWriter().println( comment.toString() );
+                    //System.out.println(comment.toString());
+                    //System.out.println(html.getBody());
                     response.getWriter().println(html.getBody());   
                 }
             }

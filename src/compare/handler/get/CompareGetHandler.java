@@ -28,6 +28,7 @@ import calliope.core.constants.JSONKeys;
 import compare.constants.Params;
 import compare.constants.Service;
 import calliope.core.Utils;
+import calliope.core.exception.DbException;
 import calliope.json.JSONResponse;
 import calliope.json.corcode.Range;
 import calliope.json.corcode.STILDocument;
@@ -153,6 +154,44 @@ public class CompareGetHandler extends CompareHandler
         return actual;
     }
     /**
+     * Get the best style or the default if none available
+     * @param docID the document id
+     * @return a style docid
+     */
+    String findStyleFor( String docID ) throws DbException
+    {
+        Connection conn = Connector.getConnection();
+        String original = new String(docID);
+        String jStr = null;
+        do
+        {
+            jStr = conn.getFromDb(Database.CORFORM,docID);
+            if ( jStr == null )
+            {
+                String last = Utils.last(docID);
+                if ( last.equals("default") )
+                {
+                    docID = Utils.chomp(docID);
+                    if ( docID.length()>0 )
+                        docID = Utils.chomp(docID)+"/"+last;
+                    else if ( !docID.equals("TEI") )
+                    {
+                        docID = "TEI/default";
+                    }
+                    else
+                        break;
+                }
+                else
+                    docID += "/"+"default";
+            }
+        }
+        while ( jStr == null );
+        if ( jStr == null )
+            throw new DbException("Failed to find "+original);
+        else
+            return docID;
+     }
+    /**
      * Try to retrieve the CorTex/CorCode version specified by the path
      * @param db the database to fetch from
      * @param docID the document ID
@@ -171,58 +210,53 @@ public class CompareGetHandler extends CompareHandler
         try
         {
             res = Connector.getConnection().getFromDb(db,docID);
+            if ( res != null )
+                doc = (JSONObject)JSONValue.parse( res );
+            if ( doc != null )
+            {
+                String format = (String)doc.get(JSONKeys.FORMAT);
+                if ( format == null )
+                    throw new CompareException("doc missing format");
+                version.setFormat( format );
+                if ( version.getFormat().equals(Formats.MVD) )
+                {
+                    MVD mvd = MVDFile.internalise( (String)doc.get(
+                        JSONKeys.BODY) );
+                    if ( vPath == null )
+                        vPath = (String)doc.get( JSONKeys.VERSION1 );
+                    version.setStyle(findStyleFor(docID));
+                    String sName = Utils.getShortName(vPath);
+                    String gName = Utils.getGroupName(vPath);
+                    int vId = mvd.getVersionByNameAndGroup(sName, gName );
+                    version.setMVD(mvd);
+                    if ( vId != 0 )
+                    {
+                        data = mvd.getVersion( vId );
+                        if ( data != null )
+                            version.setVersion( data );
+                        else
+                            throw new CompareException("Version "+vPath+" not found");
+                    }
+                    else
+                        throw new CompareException("Version "+vPath+" not found");
+                }
+                else
+                {
+                    String body = (String)doc.get( JSONKeys.BODY );
+                    version.setStyle((String)doc.get(JSONKeys.STYLE));
+                    if ( body == null )
+                        throw new CompareException("empty body");
+                    data = new char[body.length()];
+                    body.getChars(0,data.length,data,0);
+                    version.setVersion( data );
+                }
+            }
+            return version;
         }
         catch ( Exception e )
         {
             throw new CompareException( e );
         }
-        if ( res != null )
-            doc = (JSONObject)JSONValue.parse( res );
-        if ( doc != null )
-        {
-            String format = (String)doc.get(JSONKeys.FORMAT);
-            if ( format == null )
-                throw new CompareException("doc missing format");
-            version.setFormat( format );
-            if ( version.getFormat().equals(Formats.MVD) )
-            {
-                MVD mvd = MVDFile.internalise( (String)doc.get(
-                    JSONKeys.BODY) );
-                if ( vPath == null )
-                    vPath = (String)doc.get( JSONKeys.VERSION1 );
-                version.setStyle((String)doc.get(JSONKeys.STYLE));
-                String sName = Utils.getShortName(vPath);
-                String gName = Utils.getGroupName(vPath);
-                int vId = mvd.getVersionByNameAndGroup(sName, gName );
-                version.setMVD(mvd);
-                if ( vId != 0 )
-                {
-                    data = mvd.getVersion( vId );
-                    String desc = mvd.getDescription();
-                    //System.out.println("description="+desc);
-                    //int nversions = mvd.numVersions();
-                    //System.out.println("nversions="+nversions);
-                    //System.out.println("length of version "+vId+"="+data.length);
-                    if ( data != null )
-                        version.setVersion( data );
-                    else
-                        throw new CompareException("Version "+vPath+" not found");
-                }
-                else
-                    throw new CompareException("Version "+vPath+" not found");
-            }
-            else
-            {
-                String body = (String)doc.get( JSONKeys.BODY );
-                version.setStyle((String)doc.get(JSONKeys.STYLE));
-                if ( body == null )
-                    throw new CompareException("empty body");
-                data = new char[body.length()];
-                body.getChars(0,data.length,data,0);
-                version.setVersion( data );
-            }
-        }
-        return version;
     }
     /**
      * Fetch and load an MVD
@@ -479,7 +513,7 @@ public class CompareGetHandler extends CompareHandler
             throw new CompareException( e );
         }
     }     
-    protected String getVersionTableForUrn( String urn ) throws CompareException
+    protected String getVersionTable( String urn ) throws CompareException
     {
         try
         {

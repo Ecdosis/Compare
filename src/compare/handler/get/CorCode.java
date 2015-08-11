@@ -16,18 +16,16 @@
 package compare.handler.get;
 
 
-import calliope.json.corcode.Annotation;
-import calliope.json.corcode.Range;
+import calliope.core.json.corcode.Annotation;
+import calliope.core.json.corcode.Range;
 import edu.luc.nmerge.mvd.MVD;
 import edu.luc.nmerge.mvd.Pair;
 import java.util.ArrayList;
 import calliope.core.constants.JSONKeys;
 import compare.constants.ChunkState;
 import org.json.simple.JSONObject;
-import org.json.simple.JSONArray;
 import calliope.json.corcode.RangeComplete;
 import calliope.json.corcode.ProgressiveParser;
-import calliope.core.exception.JSONException;
 /**
  * Construct a CorCode programmatically
  * @author desmond
@@ -46,6 +44,10 @@ public class CorCode extends JSONObject implements RangeComplete
     int offset;
     /** the transposition id-generator */
     IdGenerator idGen;
+    static final int BOTH = 3;
+    static final int NEITHER = 0;
+    static final int V1 = 1;
+    static final int V2 = 2;
     /**
      * Create a new CorCode
      * @param style the style name to use for this CorCode
@@ -93,23 +95,33 @@ public class CorCode extends JSONObject implements RangeComplete
      */
     private Range addRange( Range r ) 
     {
-        JSONObject doc = new JSONObject();
-        int reloff = r.offset - lastOffset;
-        lastOffset = r.offset;
-        doc.put( JSONKeys.NAME, r.name );
-        doc.put( JSONKeys.RELOFF, reloff );
-        doc.put( JSONKeys.LEN, r.len );
-        if ( r.annotations != null && r.annotations.size() > 0 )
+        try
         {
-            ArrayList<Object> attrs = new ArrayList<Object>();
-            for ( int i=0;i<r.annotations.size();i++ )
+            int reloff = r.offset - lastOffset;
+            if ( r.getHasText() )
             {
-                Annotation a = r.annotations.get( i );
-                attrs.add( a.toJSONObject() );
+                JSONObject doc = new JSONObject();
+                if ( reloff > 0 )
+                    lastOffset = r.offset;
+                doc.put( JSONKeys.NAME, r.name );
+                doc.put( JSONKeys.RELOFF, reloff );
+                doc.put( JSONKeys.LEN, r.len );
+                if ( r.annotations != null && r.annotations.size() > 0 )
+                {
+                    ArrayList<Object> attrs = new ArrayList<Object>();
+                    for ( int i=0;i<r.annotations.size();i++ )
+                    {
+                        Annotation a = r.annotations.get( i );
+                        attrs.add( a.toJSONObject() );// throws JSONException
+                    }
+                    doc.put( JSONKeys.ANNOTATIONS, attrs );
+                }
+                ranges.add( doc );
             }
-            doc.put( JSONKeys.ANNOTATIONS, attrs );
         }
-        ranges.add( doc );
+        catch ( Exception e )
+        {
+        }
         return null;
     }
     /**
@@ -130,8 +142,7 @@ public class CorCode extends JSONObject implements RangeComplete
                 Pair p = pairs.get( i );
                 if ( p.versions.nextSetBit(v1)==v1 )
                 {
-                    String str = new String(p.getData(),text.getEncoding());
-                    char[] chars = str.toCharArray();
+                    char[] chars = p.getChars();
                     if ( p.versions.nextSetBit(v2)!=v2 )
                     {
                         if ( current == null )
@@ -179,16 +190,34 @@ public class CorCode extends JSONObject implements RangeComplete
      * Get the name of the current range from the pair and the default name
      * @param p the pair to test
      * @param defaultName if not a transposition return this
+     * @param hasv1 true if the current pair has v1
+     * @param hasv2 true if the current pair has v2
      * @return a String being the name of the new range
      */
-    String getState( Pair p, String defaultName )
+    String getStateName( Pair p, String defaultName, boolean hasv1, boolean hasv2 )
     {
-        if ( p.isParent() )
+        if ( !hasv1 && hasv2 )
+            return "";
+        else if ( hasv1 && hasv2 )
+            return "merged";
+        else if ( p.isParent() )
             return ChunkState.PARENT;
         else if ( p.isChild() )
             return ChunkState.CHILD;
         else
             return defaultName;
+    }
+    private boolean pairHasText( Pair p )
+    {
+        char[] data = p.getChars();
+        for ( int i=0;i<data.length;i++ )
+        {
+            if ( !Character.isWhitespace(data[i]) )
+            {
+                return true;
+            }
+        }
+        return false;
     }
     /**
      * Create a new Range
@@ -211,6 +240,7 @@ public class CorCode extends JSONObject implements RangeComplete
         }
         r.offset = offset;
         r.len = p.length();
+        r.setHasText( pairHasText(p) );
         return r;
     }
     /**
@@ -243,56 +273,126 @@ public class CorCode extends JSONObject implements RangeComplete
             }
         }
     }
+    int getSet(boolean v1, boolean v2 )
+    {
+        if ( v1 && v2 )
+            return BOTH;
+        else if ( !v1 && !v2 )
+            return NEITHER;
+        else if ( v1 )
+            return V1;
+        else
+            return V2;
+    }
+    /**
+     * Decide whether we need to split the current state from the new state
+     * @param old the old match state of v1 and v2
+     * @param newSet the new state 
+     * @return true if we should break the current accumulating property
+     */
+    boolean getSplit( int old, int newSet, String oldName, String newName )
+    {
+        if ( !oldName.equals(newName) )
+            return true;
+        else
+        {
+            // may seem long-winded but it is clear
+            switch ( old )
+            {
+                case BOTH:
+                    switch (newSet)
+                    {
+                        case BOTH: 
+                            return false;
+                        case V1: case V2:
+                            return true;
+                    }
+                    break;
+                case V1:
+                    switch (newSet)
+                    {
+                        case BOTH: case V2:
+                            return true;
+                        case V1: 
+                            return false;
+                    }
+                    break;
+                case V2:
+                    switch (newSet)
+                    {
+                        case BOTH: case V1:
+                            return true;
+                        case V2: 
+                            return false;
+                    }
+                    break;
+                default: 
+                    return false;
+            }
+            return false;
+        }
+    }
     /**
      * Compare two versions of an MVD and store the result in this corcode
      * @param text the MVD
      * @param v1 the first version to compare with v2
      * @param v2 the second version to compare with v1
      * @param state the name of the ranges to create
-     * @param runs an array of runs in v1 where it is permitted to merge spans
      */
-    public void compareText( MVD text, int v1, int v2, String state, 
-        Run[] runs )
+    public void compareText( MVD text, int v1, int v2, String state )
     {
         try
         {
-            int j = 0;
             ArrayList<Pair> pairs = text.getPairs();
+            String name,currName;
+            int oldSet = 0;
+            int newSet = 0;
             boolean split = false;
+            current = null;
             for ( int i=0;i<pairs.size();i++ )
             {
                 Pair p = pairs.get( i );
                 boolean hasv1 = p.versions.nextSetBit(v1)==v1;
                 boolean hasv2 = p.versions.nextSetBit(v2)==v2;
-                split = split||(hasv1&&!hasv2)||(hasv2&&!hasv1);
-                if ( p.length()> 0 )
+                if ( hasv1 || hasv2 )
                 {
-                    if ( hasv1 )
+                    String content = new String(p.getChars());
+                    //System.out.print(content);
+                    name = getStateName(p,state,hasv1,hasv2);
+                    oldSet = newSet;
+                    newSet = getSet( hasv1,hasv2 );
+                    currName = (current==null)?"":current.getName();
+                    split = getSplit(oldSet,newSet,currName,name);
+                    if ( split )
                     {
-                        if ( !hasv2 )
+                        if ( current != null )
+                            current = addRange( current );
+                        if ( name.length()> 0 )
                         {
-                            String name = getState(p,state);
-                            // save or extend current range
-                            if ( current != null && !name.equals(current.getName()) )
-                                current = addRange( current );
-                            // else create new range
-                            if ( current == null )
-                                current = newCurrent( p, name );
-                            else
-                                current.len += p.length();
+                            current = newCurrent( p, name );
+                            if ( newSet == BOTH )
+                            {
+                                char prefix = state.charAt(0);
+                                current.addAnnotation( "mergeid", prefix
+                                    +new Integer(idGen.next()).toString() );
+                            }
                         }
-                        else    // hasv1 && hasv2
-                        {
-                            if ( current != null 
-                                && !current.name.equals(ChunkState.MERGED) )
-                                current = addRange( current );
-                            doMergedPair( p, state.charAt(0), split );
-                            split = false;
-                        }
-                        offset += p.length();
                     }
+                    else if ( current != null )
+                    {
+                        current.len += p.length();
+                        if ( !current.getHasText() && pairHasText(p) )
+                            current.setHasText(true);
+                    }
+                    if ( hasv1 )
+                        offset += p.length();
                 }
             }
+            if ( current != null && oldSet == BOTH )
+                current = addRange( current );
+//            for ( int i=0;i<ranges.size();i++ )
+//                System.out.println(ranges.get(i).toJSONString());
+//            System.out.println("Compared "+v1+" with "+v2+"; maxid="+idGen.getCurrent());
         }
         catch ( Exception e )
         {
