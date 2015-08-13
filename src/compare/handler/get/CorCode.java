@@ -356,8 +356,6 @@ public class CorCode extends JSONObject implements RangeComplete
                 boolean hasv2 = p.versions.nextSetBit(v2)==v2;
                 if ( hasv1 || hasv2 )
                 {
-                    String content = new String(p.getChars());
-                    //System.out.print(content);
                     name = getStateName(p,state,hasv1,hasv2);
                     oldSet = newSet;
                     newSet = getSet( hasv1,hasv2 );
@@ -388,7 +386,7 @@ public class CorCode extends JSONObject implements RangeComplete
                         offset += p.length();
                 }
             }
-            if ( current != null && oldSet == BOTH )
+            if ( current != null )
                 current = addRange( current );
 //            for ( int i=0;i<ranges.size();i++ )
 //                System.out.println(ranges.get(i).toJSONString());
