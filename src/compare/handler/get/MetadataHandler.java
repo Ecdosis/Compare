@@ -81,7 +81,7 @@ public abstract class MetadataHandler extends CompareGetHandler
      * @param conn the database connection
      * @throws CompareException 
      */
-    private void getMetadataFromCortex( Connection conn ) throws CompareException
+    public void getMetadataFromCortex( Connection conn ) throws CompareException
     {
         try
         {

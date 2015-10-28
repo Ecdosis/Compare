@@ -20,6 +20,11 @@ public class Version1Handler extends MetadataHandler
     {
         super( JSONKeys.VERSION1 );
     }
+    public Version1Handler( String docid )
+    {
+        super( JSONKeys.VERSION1 );
+        this.docid = docid;
+    }
     /**
      * When all else fails, get version1 from the MVD
      * @param jObj the BSON object from the CORTEX

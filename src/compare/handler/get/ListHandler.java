@@ -186,8 +186,8 @@ public class ListHandler extends CompareGetHandler
                 Range h = groups.get(groups.size()-1);
                 group.put(JSONKeys.LEN,new Integer(groupEnd-h.offset));
             }
-            else
-                throw new CompareException("no groups defined");
+            //else
+            //    throw new CompareException("no groups defined");
             // update list length
             listDoc.put( JSONKeys.LEN, new Integer(offset-listStart) );
         }

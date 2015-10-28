@@ -33,7 +33,7 @@ import calliope.json.JSONResponse;
 import calliope.json.corcode.Range;
 import calliope.json.corcode.STILDocument;
 import compare.handler.CompareHandler;
-import compare.handler.EcdosisMVD;
+import calliope.core.handler.EcdosisMVD;
 import edu.luc.nmerge.mvd.MVD;
 import edu.luc.nmerge.mvd.MVDFile;
 import javax.servlet.http.HttpServletRequest;

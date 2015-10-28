@@ -24,9 +24,10 @@ import calliope.AeseFormatter;
 import calliope.core.constants.Database;
 import calliope.core.exception.NativeException;
 import calliope.core.Utils;
+import calliope.core.database.Connector;
 import calliope.json.JSONResponse;
 import compare.handler.EcdosisVersion;
-import compare.handler.EcdosisMVD;
+import calliope.core.handler.EcdosisMVD;
 import java.util.ArrayList;
 import html.Comment;
 /**
@@ -97,13 +98,38 @@ public class HTMLComparisonHandler extends CompareGetHandler
         String version2 = request.getParameter( Params.VERSION2 );
         // the name for the differences with version2 that we generate
         String diffKind = request.getParameter( Params.DIFF_KIND );
+        if ( version1 == null )
+        {
+            try
+            {
+                Version1Handler mdh = new Version1Handler(docid);
+                mdh.getMetadataFromCortex( Connector.getConnection() );
+                version1 = mdh.metadataValue;
+            }
+            catch ( Exception e )
+            {
+                throw new CompareException(e);
+            }
+        }
+        if ( version2 == null && version1 != null )
+        {
+            try
+            {
+                NextVersionHandler nvh = new NextVersionHandler(docid,version1);
+                version2 = nvh.getVersion2();
+            }
+            catch ( Exception e )
+            {
+                throw new CompareException(e);
+            }
+        }
         if ( version1 != null && version2 != null )
         {
             if ( diffKind == null )
             {
                 diffKind = ChunkState.DELETED;
-                System.out.println("Missing parameter "
-                    +Params.DIFF_KIND+" assuming "+ChunkState.DELETED );
+                //System.out.println("Missing parameter "
+                //    +Params.DIFF_KIND+" assuming "+ChunkState.DELETED );
             }
             CorCode cc = new CorCode( diffKind );
             EcdosisMVD text = loadMVD( Database.CORTEX, docid );
