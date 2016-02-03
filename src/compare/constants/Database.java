@@ -12,23 +12,17 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with Copare.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with Compare.  If not, see <http://www.gnu.org/licenses/>.
  *  (c) copyright Desmond Schmidt 2015
  */
 package compare.constants;
 
 /**
- * Virtual context names for Compare tool
+ * mongo collection names
  * @author desmond
  */
-public class Service {
-    public static final String COMPARE = "compare";
-    public static final String LIST = "list";
-    public static final String VERSION2 = "version2";
-    public static final String VERSION1 = "version1";
-    public static final String TITLE = "title";
-    public static final String TABLE = "table";
-    public static final String HTML = "html";
-    public static final String JSON = "json";
-    public static final String INFO = "info";
+public class Database 
+{
+    /** database name for cortexs */
+    public static String CORTEX = "cortex";
 }

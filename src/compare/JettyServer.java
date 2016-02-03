@@ -20,7 +20,6 @@ package compare;
 
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import compare.handler.get.CompareGetHandler;
-import compare.handler.*;
 import compare.exception.*;
 import org.eclipse.jetty.server.Request;
 import javax.servlet.http.HttpServletRequest;

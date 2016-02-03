@@ -22,8 +22,6 @@ if [ ! -d compare/WEB-INF/lib ]; then
 fi
 rm -f compare/WEB-INF/lib/*.jar
 cp dist/Compare.jar compare/WEB-INF/lib/
-cp lib/*.jar compare/WEB-INF/lib/
-rm compare/WEB-INF/lib/servlet*.jar
 cp web.xml compare/WEB-INF/
 jar cf compare.war -C compare WEB-INF
 echo "NB: you MUST copy the contents of tomcat-bin to \$tomcat_home/bin"

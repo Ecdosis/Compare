@@ -58,16 +58,19 @@ public class CompareGetHandler extends CompareHandler
     {
         try 
         {
-            if ( urn.length()==0 )
+            String first = Utils.first(urn);
+            if ( first.length()==0 )
                 new HTMLComparisonHandler().handle(request,response,Utils.pop(urn));
-            else if ( urn.equals(Service.LIST) )
+            else if ( first.equals(Service.LIST) )
                 new ListHandler().handle(request,response,Utils.pop(urn) );
-            else if ( urn.equals(Service.VERSION2) )
+            else if ( first.equals(Service.VERSION2) )
                 new NextVersionHandler().handle(request,response,Utils.pop(urn));
-            else if ( urn.equals(Service.VERSION1) )
+            else if ( first.equals(Service.VERSION1) )
                 new Version1Handler().handle(request,response,Utils.pop(urn));
-            else if ( urn.equals(Service.TITLE) )
+            else if ( first.equals(Service.TITLE) )
                 new TitleHandler().handle(request,response,Utils.pop(urn));
+            else if ( first.equals(Service.TABLE) )
+                new TableHandler().handle(request,response, Utils.pop(urn) );
             else
                 throw new CompareException("Unknown service "+urn);
         } 
@@ -447,23 +450,6 @@ public class CompareGetHandler extends CompareHandler
             // 5. call the native library to format it
             JSONResponse html = new JSONResponse(JSONResponse.HTML);
             String text = corTex.getVersionString();
-    //        // debug
-//            try{
-//                String textString = new String(text,"UTF-8");
-//                System.out.println(textString);
-//            }catch(Exception e){}
-            // end
-//            if ( text.length==30712 )
-//            {
-//                try
-//                {
-//                    String textStr = new String( text, "UTF-8");
-//                    System.out.println(textStr );
-//                }
-//                catch ( Exception e )
-//                {
-//                }
-//            }
             int res = new AeseFormatter().format( 
                 text, corCodes, styles, html );
             if ( res == 0 )

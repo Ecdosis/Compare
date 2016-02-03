@@ -37,8 +37,24 @@ public class Params
     public final static String STYLE = "STYLE";
     /** set of selected versions if not ALL */
     public final static String SELECTED_VERSIONS = "SELECTED_VERSIONS";
+    /** shorter form of SELECTED_VERSIONS */
+    public final static String SELECTED = "selected";
     /** name of list dropdowns etc */
     public final static String NAME = "name";
     /** ID of long name string (to facilitate dynamic replacement */
     public final static String LONG_NAME_ID = "long_name_id";
+        /** offset into a version */
+    public final static String OFFSET = "OFFSET";
+    /** length of a range in the given version */
+    public final static String LENGTH = "LENGTH";
+    /** hide merged versions in a table */
+    public final static String HIDE_MERGED = "HIDE_MERGED";
+    /** compact versions where possible in a table */
+    public final static String COMPACT = "COMPACT";
+    /** expand differences to whole words in table */
+    public final static String WHOLE_WORDS = "WHOLE_WORDS";
+    /** choose only some versions for comparison */
+    public final static String SOME_VERSIONS = "SOME_VERSIONS";
+    /** first merge id for table alignment */
+    public final static String FIRSTID = "FIRSTID";
 }
