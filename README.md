@@ -6,4 +6,4 @@ multi-version document and merge the differences into the markup for the text. I
 returns a HTML string containing the merged markup+text+differences. It should be used in 
 conjunction with the [compare Drupal 
 module](https://github.com/Ecdosis/ecdosis-front/tree/master/compare), which displays the 
-result in a two-way or three-way view.
+result in a two-way or three-way view, or with the table module, which visualises an MVD via a table.
