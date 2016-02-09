@@ -65,6 +65,16 @@ public class TableHandler extends CompareGetHandler
     }
     /**
      * Get the base version number (1-#versions)
+     * @param base the version id of the base
+     * @return the base version without fail (1 by default)
+     */
+    protected int getBaseVersionLen( MVD mvd, short base )
+    {
+        int[] lengths = mvd.getVersionLengths();
+        return lengths[base-1];
+    }
+    /**
+     * Get the base version number (1-#versions)
      * @param baseVersion the vid or full version name
      * @return the base version without fail (1 by default)
      */

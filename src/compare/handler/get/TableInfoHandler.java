@@ -35,6 +35,7 @@ import calliope.core.handler.EcdosisMVD;
 import compare.constants.Database;
 public class TableInfoHandler extends TableHandler 
 {
+    static final int CHUNK = 100;
     /**
      * Handle a request to get some metadata for a document
      * @param request the http request
@@ -57,14 +58,27 @@ public class TableInfoHandler extends TableHandler
                 String selected = getStringOption(map,Params.SELECTED,ALL);
                 String baseVersion = selectVersion1(mvd,selected);
                 short base = getBaseVersion(mvd.mvd,baseVersion);
+                int baseLen = getBaseVersionLen(mvd.mvd,base);
                 int[] offsets = mvd.mvd.measureTable( base, selected );
-                if ( offsets != null )
+                int numSegs = Math.round((float)offsets.length/(float)CHUNK);
+                if ( numSegs == 0 )
+                    numSegs = 1;
+                int[] segs = new int[numSegs+1];
+                if ( numSegs == 2 )
                 {
-                    JSONArray arr = new JSONArray();
-                    for ( int i=0;i<offsets.length;i++ )
-                        arr.add(offsets[i]);
-                    json = arr.toJSONString();
+                    segs[0] = 0;
+                    segs[1] = baseLen;
                 }
+                else
+                {
+                    for ( int i=0;i<numSegs;i++ )
+                        segs[i] = offsets[i*CHUNK];
+                }
+                segs[segs.length-1] = baseLen;
+                JSONArray arr = new JSONArray();
+                for ( int i=0;i<segs.length;i++ )
+                    arr.add(segs[i]);
+                json = arr.toJSONString();
             }
             else
                 System.out.println("CORTEX mvd "+docid+" not found");

@@ -44,9 +44,9 @@ public class Params
     /** ID of long name string (to facilitate dynamic replacement */
     public final static String LONG_NAME_ID = "long_name_id";
         /** offset into a version */
-    public final static String OFFSET = "OFFSET";
+    public final static String OFFSET = "offset";
     /** length of a range in the given version */
-    public final static String LENGTH = "LENGTH";
+    public final static String LENGTH = "length";
     /** hide merged versions in a table */
     public final static String HIDE_MERGED = "HIDE_MERGED";
     /** compact versions where possible in a table */

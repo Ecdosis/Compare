@@ -3,6 +3,7 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
+            <file>file:/home/desmond/NetBeansProjects/Compare/src/compare/handler/get/TableInfoHandler.java</file>
             <file>file:/home/desmond/NetBeansProjects/Compare/src/compare/JettyServer.java</file>
             <file>file:/home/desmond/NetBeansProjects/Compare/src/compare/exception/CompareException.java</file>
             <file>file:/home/desmond/NetBeansProjects/Compare/src/compare/handler/get/IdGenerator.java</file>
@@ -17,12 +18,14 @@
             <file>file:/home/desmond/NetBeansProjects/Compare/src/compare/handler/get/NextVersionHandler.java</file>
             <file>file:/home/desmond/NetBeansProjects/Compare/src/compare/handler/get/CorCode.java</file>
             <file>file:/home/desmond/NetBeansProjects/Compare/src/compare/handler/get/Version1Handler.java</file>
+            <file>file:/home/desmond/NetBeansProjects/Compare/src/compare/handler/get/TableHandler.java</file>
             <file>file:/home/desmond/NetBeansProjects/Compare/src/compare/constants/Service.java</file>
             <file>file:/home/desmond/NetBeansProjects/Compare/src/compare/handler/get/ListHandler.java</file>
             <file>file:/home/desmond/NetBeansProjects/Compare/src/compare/handler/get/Run.java</file>
             <file>file:/home/desmond/NetBeansProjects/Compare/src/compare/handler/CompareHandler.java</file>
             <file>file:/home/desmond/NetBeansProjects/Compare/src/compare/handler/get/MetadataHandler.java</file>
             <file>file:/home/desmond/NetBeansProjects/Compare/src/compare/JettyServerThread.java</file>
+            <file>file:/home/desmond/NetBeansProjects/Compare/src/compare/handler/get/JSONTableHandler.java</file>
         </group>
     </open-files>
 </project-private>
