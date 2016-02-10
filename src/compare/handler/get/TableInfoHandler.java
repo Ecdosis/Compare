@@ -35,7 +35,7 @@ import calliope.core.handler.EcdosisMVD;
 import compare.constants.Database;
 public class TableInfoHandler extends TableHandler 
 {
-    static final int CHUNK = 100;
+    static final int CHUNK = 50;
     /**
      * Handle a request to get some metadata for a document
      * @param request the http request
