@@ -24,6 +24,8 @@ import compare.exception.CompareException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
+import java.io.File;
+import java.io.FileOutputStream;
 
 /**
  * Handle requests for a JSON formatted version of the MVD as a table
@@ -60,6 +62,12 @@ public class JSONTableHandler extends TableHandler
             else
                 System.out.println("empty docid");
             response.setContentType("application/json;charset=UTF-8");
+            // debug
+//            File temp = File.createTempFile("JSON",".json");
+//            FileOutputStream fos = new FileOutputStream(temp);
+//            fos.write(json.getBytes());
+//            fos.close();
+            // end debug
             response.getWriter().println( json );
         }
         catch ( Exception e )
