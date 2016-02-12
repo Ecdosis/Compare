@@ -30,7 +30,7 @@ JSON. Parameters are:
     * length: the length in base to retrieve a table of (default Integer.MAX_VALUE)
     * selected: a comma-separated list of full vids to be selected (default "all")
 6. GET /compare/table/html: Get a table representation of the MVD in 
-JSON. This was experimental and is now superseded by 
+HTML. This was experimental and is now superseded by 
 /compare/table/json. Parameters are:
     * docid: the document to make a table of
     * offset: the start offset into the table (default 0)
