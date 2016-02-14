@@ -15,21 +15,23 @@ element. Parameters are:
     * version1: the version to be initially selected in the dropdown
     * docid: the document to make the list of
     * name: the name of the select element
-3. GET /compare/version1: Get the full vid path of the default version. 
+3. GET /compare/title: get the title of a work. Parameters are:
+    * docid: the document whose title is desired
+4. GET /compare/version1: Get the full vid path of the default version. 
 Parameters are:
     * docid: the document to get the version1 of
-4. GET /compare/version2: get the next version after version1. 
+5. GET /compare/version2: get the next version after version1. 
 Parameters are:
     * docid: the document in question
     * version1: the first version whose next version is sought
-5. GET /compare/table/json: Get a table representation of the MVD in 
+6. GET /compare/table/json: Get a table representation of the MVD in 
 JSON. Parameters are:
     * docid: the document to make a table of
     * version1: the base version (default the MVD's version1)
     * offset: the start offset into the table (default 0)
     * length: the length in base to retrieve a table of (default Integer.MAX_VALUE)
     * selected: a comma-separated list of full vids to be selected (default "all")
-6. GET /compare/table/html: Get a table representation of the MVD in 
+7. GET /compare/table/html: Get a table representation of the MVD in 
 HTML. This was experimental and is now superseded by 
 /compare/table/json. Parameters are:
     * docid: the document to make a table of
