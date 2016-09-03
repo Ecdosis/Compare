@@ -109,7 +109,7 @@ public class HTMLTableHandler extends TableHandler
             {
                 EcdosisMVD mvd = loadMVD( Database.CORTEX, docid );
                 if ( selectedVersions.equals(ALL) )
-                    baseVersion = mvd.version1;  
+                    baseVersion = mvd.getDefaultVersion();  
                 else
                 {
                     String[] parts = selectedVersions.split(",");
@@ -127,15 +127,14 @@ public class HTMLTableHandler extends TableHandler
                     else
                         shortName = baseVersion;
                 }
-                this.base = (short)mvd.mvd.getVersionByNameAndGroup( shortName, 
-                    groups );
+                this.base = mvd.getVersionByNameAndGroup( shortName, groups );
                 if ( base == 0 )
                 {
                     System.out.println("version "+shortName+" in group "
                         +groups+" not found. Substituting 1");
                     base = 1;
                 }
-                table = mvd.mvd.getTableView( base,offset,length,
+                table = mvd.getTableView( base,offset,length,
                     compact,hideMerged,wholeWords,selectedVersions,firstID,
                     "apparatus" );
             }

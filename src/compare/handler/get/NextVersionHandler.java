@@ -5,7 +5,6 @@
 package compare.handler.get;
 
 import calliope.core.constants.Database;
-import calliope.core.constants.JSONKeys;
 import compare.constants.Params;
 import compare.exception.CompareException;
 import calliope.core.handler.EcdosisMVD;
@@ -45,12 +44,12 @@ public class NextVersionHandler extends CompareGetHandler
         String shortName = Utils.getShortName( version1 );
         String groups = Utils.getGroupName( version1 );
         EcdosisMVD mvd = loadMVD( Database.CORTEX, docid );
-        int v1 = mvd.mvd.getVersionByNameAndGroup( shortName, groups );
+        int v1 = mvd.getVersionByNameAndGroup( shortName, groups );
         if ( v1 > 0 )
         {
-            int v2 = mvd.mvd.getNextVersionId( (short)v1 );
-            String groups2 = mvd.mvd.getGroupPath( (short)v2 );
-            String shortName2 = mvd.mvd.getVersionShortName( (short)v2 );
+            int v2 = mvd.getNextVersionId( (short)v1 );
+            String groups2 = mvd.getGroupPath( (short)v2 );
+            String shortName2 = mvd.getVersionShortName( (short)v2 );
             fullName = groups2+"/"+shortName2;
         }
         else
@@ -62,7 +61,7 @@ public class NextVersionHandler extends CompareGetHandler
      * @param request the request
      * @param response the response
      * @param urn the urn of the CorTex
-     * @throws AeseException 
+     * @throws CompareException failure to specify docid or version1
      */
     @Override
     public void handle( HttpServletRequest request, 
@@ -76,7 +75,7 @@ public class NextVersionHandler extends CompareGetHandler
             if ( version1 != null && docid != null )
                 fullName = getVersion2();
             else
-                throw new CompareException( "version1 or docid was unspecidied");
+                throw new CompareException( "version1 or docid was unspecified");
             response.setContentType("text/plain;charset=UTF-8");
             response.getWriter().println( fullName );
         }

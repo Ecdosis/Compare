@@ -24,8 +24,8 @@ import java.util.ArrayList;
 import calliope.core.constants.JSONKeys;
 import compare.constants.ChunkState;
 import org.json.simple.JSONObject;
-import calliope.json.corcode.RangeComplete;
-import calliope.json.corcode.ProgressiveParser;
+import calliope.core.json.corcode.RangeComplete;
+import calliope.core.json.corcode.ProgressiveParser;
 /**
  * Construct a CorCode programmatically
  * @author desmond

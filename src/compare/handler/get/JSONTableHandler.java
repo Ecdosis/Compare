@@ -24,8 +24,6 @@ import compare.exception.CompareException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
-import java.io.File;
-import java.io.FileOutputStream;
 
 /**
  * Handle requests for a JSON formatted version of the MVD as a table
@@ -55,8 +53,8 @@ public class JSONTableHandler extends TableHandler
                 if ( mvd != null )
                 {
                     baseVersion = selectVersion1(mvd,selected);
-                    short base = getBaseVersion(mvd.mvd,baseVersion);
-                    json = mvd.mvd.getTable( base, offset, length, selected );
+                    short base = mvd.getBaseVersion(baseVersion);
+                    json = mvd.getTable( base, offset, length, selected );
                 }
             }
             else

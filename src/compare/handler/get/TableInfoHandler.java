@@ -41,7 +41,7 @@ public class TableInfoHandler extends TableHandler
      * @param request the http request
      * @param response the response
      * @param urn the current urn (ignored)
-     * @throws CompareException 
+     * @throws CompareException if loading of MVD failed
      */
     public void handle(HttpServletRequest request,
         HttpServletResponse response, String urn) throws CompareException 
@@ -57,9 +57,9 @@ public class TableInfoHandler extends TableHandler
                 EcdosisMVD mvd = loadMVD( Database.CORTEX, docid );
                 String selected = getStringOption(map,Params.SELECTED,ALL);
                 String baseVersion = selectVersion1(mvd,selected);
-                short base = getBaseVersion(mvd.mvd,baseVersion);
-                int baseLen = getBaseVersionLen(mvd.mvd,base);
-                int[] offsets = mvd.mvd.measureTable( base, selected );
+                short base = mvd.getBaseVersion(baseVersion);
+                int baseLen = getBaseVersionLen(mvd,base);
+                int[] offsets = mvd.measureTable( base );
                 int numSegs = Math.round((float)offsets.length/(float)CHUNK);
                 if ( numSegs == 0 )
                     numSegs = 1;
@@ -81,7 +81,7 @@ public class TableInfoHandler extends TableHandler
                 json = arr.toJSONString();
             }
             else
-                System.out.println("CORTEX mvd "+docid+" not found");
+                throw new Exception("CORTEX mvd "+docid+" not found");
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().println( json );
         }

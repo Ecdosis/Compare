@@ -21,26 +21,24 @@ package compare.handler.get;
 import calliope.AeseFormatter;
 import calliope.core.database.*;
 import compare.exception.CompareException;
-import calliope.core.URLEncoder;
 import calliope.core.constants.Formats;
 import calliope.core.constants.Database;
 import calliope.core.constants.JSONKeys;
+import calliope.core.exception.CalliopeException;
 import compare.constants.Params;
 import compare.constants.Service;
 import calliope.core.Utils;
-import calliope.core.exception.DbException;
 import calliope.json.JSONResponse;
-import calliope.json.corcode.Range;
-import calliope.json.corcode.STILDocument;
+import calliope.core.json.corcode.Range;
+import calliope.core.json.corcode.STILDocument;
 import compare.handler.CompareHandler;
 import calliope.core.handler.EcdosisMVD;
 import edu.luc.nmerge.mvd.MVD;
-import edu.luc.nmerge.mvd.MVDFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONValue;
 import org.json.simple.JSONObject;
-import compare.handler.EcdosisVersion;
+import calliope.core.handler.EcdosisVersion;
 import edu.luc.nmerge.mvd.Pair;
 import html.Comment;
 import java.util.HashSet;
@@ -63,6 +61,8 @@ public class CompareGetHandler extends CompareHandler
                 new HTMLComparisonHandler().handle(request,response,Utils.pop(urn));
             else if ( first.equals(Service.LIST) )
                 new ListHandler().handle(request,response,Utils.pop(urn) );
+            else if ( first.equals(Service.LAYERS) )
+                new LayerHandler().handle(request,response, Utils.pop(urn) );
             else if ( first.equals(Service.VERSION2) )
                 new NextVersionHandler().handle(request,response,Utils.pop(urn));
             else if ( first.equals(Service.VERSION1) )
@@ -88,185 +88,11 @@ public class CompareGetHandler extends CompareHandler
         }
     }   
     /**
-     * Get the document body of the given urn or null
-     * @param db the database where it is
-     * @param docID the docID of the resource
-     * @return the document body or null if not present
-     */
-    private static String getDocumentBody( String db, String docID ) 
-        throws CompareException
-    {
-        try
-        {
-            String jStr = Connector.getConnection().getFromDb(db,docID);
-            if ( jStr != null )
-            {
-                JSONObject jDoc = (JSONObject)JSONValue.parse( jStr );
-                if ( jDoc != null )
-                {
-                    String body = (String)jDoc.get(JSONKeys.BODY);
-                    if ( body != null )
-                        return body;
-                }
-            }
-            throw new CompareException("document "+db+"/"+docID+" not found");
-        }
-        catch ( Exception e )
-        {
-            throw new CompareException( e );
-        }
-    }
-    /**
-     * Fetch a single style text
-     * @param style the path to the style in the corform database
-     * @return the text of the style
-     */
-    protected String fetchStyle( String style ) throws CompareException
-    {
-        // 1. try to get each literal style name
-        String actual = getDocumentBody(Database.CORFORM,style);
-        while ( actual == null )
-        {
-            // 2. add "default" to the end
-            actual = getDocumentBody( Database.CORFORM,
-                URLEncoder.append(style,Formats.DEFAULT) );
-            if ( actual == null )
-            {
-                // 3. pop off last path component and try again
-                if ( style.length()>0 )
-                    style = Utils.chomp(style);
-                else
-                    throw new CompareException("no suitable format");
-            }
-        }
-        return actual;
-    }
-    /**
-     * Get the actual styles from the database. Make sure we fetch something
-     * @param styles an array of style ids
-     * @return an array of database contents for those ids
-     * @throws a CompareException only if the database is not set up
-     */
-    protected String[] fetchStyles( String[] styles ) throws CompareException
-    {
-        String[] actual = new String[styles.length];
-        for ( int i=0;i<styles.length;i++ )
-        {
-            actual[i] = fetchStyle( styles[i] );
-        }
-        return actual;
-    }
-    /**
-     * Get the best style or the default if none available
-     * @param docID the document id
-     * @return a style docid
-     */
-    String findStyleFor( String docID ) throws DbException
-    {
-        Connection conn = Connector.getConnection();
-        String original = new String(docID);
-        String jStr = null;
-        do
-        {
-            jStr = conn.getFromDb(Database.CORFORM,docID);
-            if ( jStr == null )
-            {
-                String last = Utils.last(docID);
-                if ( last.equals("default") )
-                {
-                    docID = Utils.chomp(docID);
-                    if ( docID.length()>0 )
-                        docID = Utils.chomp(docID)+"/"+last;
-                    else if ( !docID.equals("TEI") )
-                    {
-                        docID = "TEI/default";
-                    }
-                    else
-                        break;
-                }
-                else
-                    docID += "/"+"default";
-            }
-        }
-        while ( jStr == null );
-        if ( jStr == null )
-            throw new DbException("Failed to find "+original);
-        else
-            return docID;
-     }
-    /**
-     * Try to retrieve the CorTex/CorCode version specified by the path
-     * @param db the database to fetch from
-     * @param docID the document ID
-     * @param vPath the groups/version path to get
-     * @return the CorTex/CorCode version contents or null if not found
-     * @throws CompareException if the resource couldn't be found
-     */
-    protected EcdosisVersion doGetResourceVersion( String db, String docID, 
-        String vPath ) throws CompareException
-    {
-        EcdosisVersion version = new EcdosisVersion();
-        JSONObject doc = null;
-        char[] data = null;
-        String res = null;
-        //System.out.println("fetching version "+vPath );
-        try
-        {
-            res = Connector.getConnection().getFromDb(db,docID);
-            if ( res != null )
-                doc = (JSONObject)JSONValue.parse( res );
-            if ( doc != null )
-            {
-                String format = (String)doc.get(JSONKeys.FORMAT);
-                if ( format == null )
-                    throw new CompareException("doc missing format");
-                version.setFormat( format );
-                if ( version.getFormat().equals(Formats.MVD) )
-                {
-                    MVD mvd = MVDFile.internalise( (String)doc.get(
-                        JSONKeys.BODY) );
-                    if ( vPath == null )
-                        vPath = (String)doc.get( JSONKeys.VERSION1 );
-                    version.setStyle(findStyleFor(docID));
-                    String sName = Utils.getShortName(vPath);
-                    String gName = Utils.getGroupName(vPath);
-                    int vId = mvd.getVersionByNameAndGroup(sName, gName );
-                    version.setMVD(mvd);
-                    if ( vId != 0 )
-                    {
-                        data = mvd.getVersion( vId );
-                        if ( data != null )
-                            version.setVersion( data );
-                        else
-                            throw new CompareException("Version "+vPath+" not found");
-                    }
-                    else
-                        throw new CompareException("Version "+vPath+" not found");
-                }
-                else
-                {
-                    String body = (String)doc.get( JSONKeys.BODY );
-                    version.setStyle((String)doc.get(JSONKeys.STYLE));
-                    if ( body == null )
-                        throw new CompareException("empty body");
-                    data = new char[body.length()];
-                    body.getChars(0,data.length,data,0);
-                    version.setVersion( data );
-                }
-            }
-            return version;
-        }
-        catch ( Exception e )
-        {
-            throw new CompareException( e );
-        }
-    }
-    /**
      * Fetch and load an MVD
      * @param db the database 
-     * @param docID
+     * @param docID the document identifier to fetch
      * @return the loaded MVD
-     * @throws an CompareException if not found
+     * @throws CompareException if not found
      */
     protected EcdosisMVD loadMVD( String db, String docID ) throws CompareException
     {
@@ -382,13 +208,13 @@ public class CompareGetHandler extends CompareHandler
     /**
      * Format the requested URN version as HTML
      * @param request the original http request
+     * @param response the response to write to
      * @param urn the original request urn
-     * @return the converted HTML
-     * @throws AeseException 
+     * @throws CompareException if the response could not be written
      */
     protected void handleGetVersion( HttpServletRequest request, 
         HttpServletResponse response, String urn )
-        throws CompareException
+        throws CompareException, CalliopeException
     {
         String version1 = request.getParameter( Params.VERSION1 );
         if ( version1 == null )
@@ -508,7 +334,7 @@ public class CompareGetHandler extends CompareHandler
             if ( fmt != null && fmt.startsWith(Formats.MVD) )
             {
                 EcdosisMVD mvd = loadMVD( Database.CORTEX, urn );
-                return mvd.mvd.getVersionTable();
+                return mvd.getVersionTable();
             }
             else if ( fmt !=null && fmt.equals(Formats.TEXT) )
             {

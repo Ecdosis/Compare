@@ -46,11 +46,11 @@ public class JettyServer extends AbstractHandler
     /**
      * Main entry point
      * @param target the URN part of the URI
-     * @param baseRequest 
-     * @param request
-     * @param response
-     * @throws IOException
-     * @throws ServletException 
+     * @param baseRequest The original unwrapped request object
+     * @param request the wrapped http request
+     * @param response the response
+     * @throws IOException on i/o error
+     * @throws ServletException on other servlet error
      */
     @Override
     public void handle(String target,

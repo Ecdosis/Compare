@@ -25,11 +25,12 @@ import calliope.core.constants.Database;
 import calliope.core.exception.NativeException;
 import calliope.core.Utils;
 import calliope.core.database.Connector;
+import calliope.core.exception.CalliopeException;
 import calliope.json.JSONResponse;
-import compare.handler.EcdosisVersion;
 import calliope.core.handler.EcdosisMVD;
 import java.util.ArrayList;
 import html.Comment;
+import edu.luc.nmerge.mvd.MVD;
 /**
  * Handle comparison between two versions of a document
  * @author desmond
@@ -37,55 +38,11 @@ import html.Comment;
 public class HTMLComparisonHandler extends CompareGetHandler
 {
     /**
-     * Get an array of CorCodes, and their styles and formats too
-     * @param docID the docID for the resource
-     * @param version1 the group-path+version name
-     * @param userCC an array of specified CorCode names for this docID
-     * @param diffCC the CorCode of the diffs
-     * @param styleNames an array of predefined style-names
-     * @param styles an empty arraylist of style names to be filled
-     * @return a simple array of CorCode texts in their corresponding formats
-     */
-    String[] getCorCodes( String docID, String version1, 
-        String[] userCC, CorCode diffCC, String[] styleNames, 
-        ArrayList<String> styles ) 
-        throws CompareException
-    {
-        String[] ccTexts = new String[userCC.length+1];
-        // add diffCC entries to corcodes and formats but not styles
-        ccTexts[0] = diffCC.toString();
-        // load user-defined styles
-        if ( styleNames.length>0 )
-        {
-            String[] styleTexts = fetchStyles( styleNames );
-            for ( int i=0;i<styleTexts.length;i++ )
-                styles.add( styleTexts[i] );
-        }
-        for ( int i=0;i<userCC.length;i++ )
-        {
-            String ccResource = Utils.canonisePath(docID,userCC[i]);
-            EcdosisVersion ev = doGetResourceVersion( Database.CORCODE, 
-                ccResource, version1 );
-            try
-            {
-                char[] versionText = ev.getVersion();
-                if ( versionText == null )
-                    throw new CompareException("version not found");
-                ccTexts[i+1] = new String(versionText);
-                styles.add( fetchStyle(ev.getStyle()) );
-            }
-            catch ( Exception e )
-            {
-                throw new CompareException( e );
-            }
-        }
-        return ccTexts;
-    }
-    /**
      * Get the HTML of one version compared to another
      * @param request the request to read from
-     * @param path the parsed URN
-     * @return a formatted html String
+     * @param response the response to write to
+     * @param urn the parsed URN
+     * @throws CompareException if metadata was not present in database
      */
     @Override
     public void handle( HttpServletRequest request, 
@@ -133,19 +90,22 @@ public class HTMLComparisonHandler extends CompareGetHandler
             }
             CorCode cc = new CorCode( diffKind );
             EcdosisMVD text = loadMVD( Database.CORTEX, docid );
-            int v1 = text.mvd.getVersionByNameAndGroup(
+            int v1 = text.getVersionByNameAndGroup(
                 Utils.getShortName(version1),Utils.getGroupName(version1));
             if ( v1 == -1 )
                 throw new CompareException(version1+" not found");
-            int v2 = text.mvd.getVersionByNameAndGroup(
+            int v2 = text.getVersionByNameAndGroup(
                 Utils.getShortName(version2),
                 Utils.getGroupName(version2) );
             if ( v2 == -1 )
                 throw new CompareException(version2+" not found");
-            int[] lengths = text.mvd.getVersionLengths();
+            int[] lengths = text.getVersionLengths();
             if ( lengths==null || lengths.length<v1 || lengths.length<v2  )
                 throw new CompareException( "lengths array is empty" );
-            cc.compareText( text.mvd, v1, v2, diffKind );
+            MVD m = text.getMVD();
+            if ( m == null )
+                throw new CompareException("comparing a single version file");
+            cc.compareText( m, v1, v2, diffKind );
             try
             {
                 // get corCodes
@@ -163,7 +123,7 @@ public class HTMLComparisonHandler extends CompareGetHandler
                 styleNames.toArray( styleTexts );
                 // call the native library
                 JSONResponse html = new JSONResponse(JSONResponse.HTML);
-                char[] mvdVersionText = text.mvd.getVersion(v1);
+                char[] mvdVersionText = text.getVersion(v1);
                 String mvdString = new String(mvdVersionText);
                 int res = new AeseFormatter().format( 
                     mvdString, ccTexts, styleTexts, html );
@@ -189,8 +149,15 @@ public class HTMLComparisonHandler extends CompareGetHandler
         }
         else if ( version1 != null )
         {
-            // just get the version
-            handleGetVersion( request, response, urn );
+            try
+            {
+                // just get the version
+                handleGetVersion( request, response, urn );
+            }
+            catch ( CalliopeException e )
+            {
+                throw new CompareException(e);
+            }
         }
         else
             throw new CompareException("versions unspecified");

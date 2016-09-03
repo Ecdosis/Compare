@@ -31,4 +31,5 @@ public class Service {
     public static final String HTML = "html";
     public static final String JSON = "json";
     public static final String INFO = "info";
+    public static final String LAYERS = "layers";
 }

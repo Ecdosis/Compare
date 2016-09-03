@@ -36,7 +36,7 @@ public class TitleHandler extends MetadataHandler
     /**
      * Get the title metadata item from the MVD itself
      * @param jObj the BSON document from CORTEX
-     * @throws CompareException 
+     * @throws CompareException if MVDFIle read failed
      */
     protected void getMetadataFromObject( JSONObject jObj ) 
         throws CompareException

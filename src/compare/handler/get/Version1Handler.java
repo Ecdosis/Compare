@@ -28,7 +28,7 @@ public class Version1Handler extends MetadataHandler
     /**
      * When all else fails, get version1 from the MVD
      * @param jObj the BSON object from the CORTEX
-     * @throws CompareException 
+     * @throws CompareException if MVDFile read failed
      */
     protected void getMetadataFromObject( JSONObject jObj ) 
         throws CompareException

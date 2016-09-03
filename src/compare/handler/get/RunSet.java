@@ -18,9 +18,9 @@ package compare.handler.get;
 import java.util.ArrayList;
 import org.json.simple.JSONObject;
 import calliope.core.constants.JSONKeys;
-import calliope.exception.AeseException;
-import calliope.json.corcode.ProgressiveParser;
-import calliope.json.corcode.RangeComplete;
+import calliope.core.exception.CalliopeException;
+import calliope.core.json.corcode.ProgressiveParser;
+import calliope.core.json.corcode.RangeComplete;
 /**
  * Represent a set of overlapping ranges as a set of non-overlapping runs
  * @author desmond
@@ -66,7 +66,7 @@ public class RunSet implements RangeComplete
      * @param append if true append the new runs, else erase
      * @throws AeseException if there was a parsing exception
      */
-    void add( String corCode, boolean append ) throws AeseException
+    void add( String corCode, boolean append ) throws CalliopeException
     {
         // assume that the runs (if any) are already sorted
         index = 0;
@@ -94,7 +94,7 @@ public class RunSet implements RangeComplete
         }
         catch ( Exception e )
         {
-            throw new AeseException( e );
+            throw new CalliopeException( e );
         }
     }
     /**

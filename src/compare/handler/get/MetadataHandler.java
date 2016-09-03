@@ -46,7 +46,7 @@ public abstract class MetadataHandler extends CompareGetHandler
      * Save the version1 metadata item to the METADATA database
      * @param jObj1 the object retrieved from the metadata database or null
      * @param conn the database connection
-     * @throws CompareException 
+     * @throws CompareException if database save failed
      */
     protected void saveToMetadata( JSONObject jObj1, Connection conn )
         throws CompareException
@@ -72,14 +72,14 @@ public abstract class MetadataHandler extends CompareGetHandler
     /**
      * Get the version1 metadata item from the MVD itself
      * @param jObj2 the BSON document from CORTEX
-     * @throws CompareException 
+     * @throws CompareException if the metadata was not present
      */
     protected abstract void getMetadataFromObject( JSONObject jObj2 ) 
         throws CompareException;
     /**
      * Get the version1 metadata item from the CORTEX BSON
      * @param conn the database connection
-     * @throws CompareException 
+     * @throws CompareException if the database fetch failed
      */
     public void getMetadataFromCortex( Connection conn ) throws CompareException
     {
@@ -102,7 +102,7 @@ public abstract class MetadataHandler extends CompareGetHandler
      * @param request the http request
      * @param response the response
      * @param urn the current urn (ignored)
-     * @throws CompareException 
+     * @throws CompareException if the resource could not be found
      */
     public void handle(HttpServletRequest request,
         HttpServletResponse response, String urn) throws CompareException 

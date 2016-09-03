@@ -66,42 +66,13 @@ public class TableHandler extends CompareGetHandler
     /**
      * Get the base version number (1-#versions)
      * @param base the version id of the base
+     * @param mvd the MVD to get the length of
      * @return the base version without fail (1 by default)
      */
-    protected int getBaseVersionLen( MVD mvd, short base )
+    protected int getBaseVersionLen( EcdosisMVD mvd, short base )
     {
         int[] lengths = mvd.getVersionLengths();
         return lengths[base-1];
-    }
-    /**
-     * Get the base version number (1-#versions)
-     * @param baseVersion the vid or full version name
-     * @return the base version without fail (1 by default)
-     */
-    protected short getBaseVersion( MVD mvd, String baseVersion )
-    {
-        String shortName="";
-        String groups="";
-        if ( baseVersion != null )
-        {
-            int pos = baseVersion.lastIndexOf("/");
-            if ( pos != -1 )
-            {
-                shortName = baseVersion.substring(pos+1);
-                groups = baseVersion.substring(0,pos);
-            }
-            else
-                shortName = baseVersion;
-        }
-        short base = (short)mvd.getVersionByNameAndGroup( shortName, 
-            groups );
-        if ( base == 0 )
-        {
-            System.out.println("version "+shortName+" in group "
-                +groups+" not found. Substituting 1");
-            base = 1;
-        }
-        return base;
     }
     /**
      * Choose which version to regard as version1 in case it is unspecified
@@ -115,7 +86,7 @@ public class TableHandler extends CompareGetHandler
         if ( version1 != null && version1.length()>0 )
             baseVersion = version1;
         else if ( selected.equals(ALL) )
-            baseVersion = mvd.version1;  
+            baseVersion = mvd.getDefaultVersion();  
         else
         {
             String[] parts = selected.split(",");
@@ -129,7 +100,7 @@ public class TableHandler extends CompareGetHandler
      * @param request the http request
      * @param response the response
      * @param urn the current urn (ignored)
-     * @throws CompareException 
+     * @throws CompareException if one of the services threw an error
      */
     public void handle(HttpServletRequest request,
         HttpServletResponse response, String urn) throws CompareException 
